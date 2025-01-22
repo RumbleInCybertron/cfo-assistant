@@ -7,6 +7,7 @@ from jose import jwt, JWTError
 from app.models import User
 from app.db import SessionLocal
 from sqlalchemy.orm import Session
+from . import models, schemas
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 ALGORITHM = "HS256"
@@ -65,3 +66,28 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def create_budget(db: Session, budget: schemas.BudgetCreate, owner_id: int):
+    db_budget = models.Budget(**budget.dict(), owner_id=owner_id)
+    db.add(db_budget)
+    db.commit()
+    db.refresh(db_budget)
+    return db_budget
+
+def get_budgets(db: Session, owner_id: int):
+    return db.query(models.Budget).filter(models.Budget.owner_id == owner_id).all()
+
+def update_budget(db: Session, budget_id: int, budget: schemas.BudgetCreate, owner_id: int):
+    db_budget = db.query(models.Budget).filter(models.Budget.id == budget_id, models.Budget.owner_id == owner_id).first()
+    if db_budget:
+        for key, value in budget.dict().items():
+            setattr(db_budget, key, value)
+        db.commit()
+        db.refresh(db_budget)
+    return db_budget
+
+def delete_budget(db: Session, budget_id: int, owner_id: int):
+    db_budget = db.query(models.Budget).filter(models.Budget.id == budget_id, models.Budget.owner_id == owner_id).first()
+    if db_budget:
+        db.delete(db_budget)
+        db.commit()
+    return db_budget
