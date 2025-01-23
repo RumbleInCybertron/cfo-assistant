@@ -4,10 +4,11 @@ from fastapi.security import OAuth2PasswordBearer
 import os
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
-from app.models import User
+from app.models import User, Transaction
 from app.db import SessionLocal
 from sqlalchemy.orm import Session
 from . import models, schemas
+from app.schemas import TransactionCreate, TransactionUpdate
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 ALGORITHM = "HS256"
@@ -91,3 +92,51 @@ def delete_budget(db: Session, budget_id: int, owner_id: int):
         db.delete(db_budget)
         db.commit()
     return db_budget
+
+def create_transaction(db: Session, transaction_data: TransactionCreate):
+    """Create a new transaction."""
+    new_transaction = Transaction(
+        amount=transaction_data.amount,
+        category=transaction_data.category,
+        budget_id=transaction_data.budget_id
+    )
+    db.add(new_transaction)
+    db.commit()
+    db.refresh(new_transaction)
+    return new_transaction
+
+
+def get_transactions_by_budget(db: Session, budget_id: int):
+    """Retrieve transactions for a specific budget."""
+    return db.query(Transaction).filter(Transaction.budget_id == budget_id).all()
+
+
+def get_transaction_by_id(db: Session, transaction_id: int):
+    """Retrieve a transaction by its ID."""
+    return db.query(Transaction).filter(Transaction.id == transaction_id).first()
+
+
+def update_transaction(db: Session, transaction_id: int, transaction_data: TransactionUpdate):
+    """Update an existing transaction."""
+    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    if not transaction:
+        return None
+
+    # Update fields only if provided
+    transaction.amount = transaction_data.amount or transaction.amount
+    transaction.category = transaction_data.category or transaction.category
+
+    db.commit()
+    db.refresh(transaction)
+    return transaction
+
+
+def delete_transaction(db: Session, transaction_id: int):
+    """Delete a transaction."""
+    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    if not transaction:
+        return None
+
+    db.delete(transaction)
+    db.commit()
+    return transaction

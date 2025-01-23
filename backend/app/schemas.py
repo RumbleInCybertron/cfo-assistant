@@ -34,7 +34,7 @@ class TransactionBase(BaseModel):
     date: Optional[datetime] = None
 
 class TransactionCreate(TransactionBase):
-    pass
+    budget_id: int
 
 class TransactionResponse(TransactionBase):
     id: int
@@ -42,3 +42,7 @@ class TransactionResponse(TransactionBase):
 
     class Config:
         from_attributes = True
+
+class TransactionUpdate(BaseModel):
+    amount: Optional[float] = None
+    category: Optional[str] = None

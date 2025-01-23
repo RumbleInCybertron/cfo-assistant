@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import users, budgets
+from app.routes import users, budgets, transactions
 from app.db import Base, engine
 import sys
 import os
@@ -15,6 +15,7 @@ app = FastAPI()
 # Include routers
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(budgets.router, prefix="/budgets", tags=["budgets"])
+app.include_router(transactions.router, prefix="/transactions", tags=["transactions"])
 
 @app.get("/")
 def root():
