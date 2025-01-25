@@ -30,7 +30,7 @@ class BudgetResponse(BudgetBase):
 
 class TransactionBase(BaseModel):
     amount: float
-    category: str
+    category_id: int
     date: Optional[datetime] = None
 
 class TransactionCreate(TransactionBase):
